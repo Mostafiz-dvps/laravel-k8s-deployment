@@ -1,0 +1,26 @@
+# Laravel
+.env
+vendor/
+node_modules/
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+public/hot
+public/storage
+
+# Docker
+*.tar
+
+# Kubernetes
+*.kubeconfig
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

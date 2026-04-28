@@ -1,0 +1,4 @@
+NAME                                        READY   STATUS      RESTARTS   AGE
+ingress-nginx-admission-create-cs6ph        0/1     Completed   0          28m
+ingress-nginx-admission-patch-twms6         0/1     Completed   2          28m
+ingress-nginx-controller-78f9c659f6-ts5f6   1/1     Running     0          28m
