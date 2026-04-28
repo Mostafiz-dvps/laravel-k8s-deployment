@@ -1,0 +1,15 @@
+Laravel has been deployed successfully!
+
+Application URL:
+  http://{{ .Values.ingress.host }}
+
+Add to /etc/hosts to test locally:
+  <NODE-IP> {{ .Values.ingress.host }}
+
+Test endpoints:
+  curl -H "Host: {{ .Values.ingress.host }}" http://<NODE-IP>:<NODE-PORT>/
+  curl -H "Host: {{ .Values.ingress.host }}" http://<NODE-IP>:<NODE-PORT>/health
+
+Helm commands:
+  Upgrade: helm upgrade laravel ./helm/laravel --set secret.appKey=<key>
+  Uninstall: helm uninstall laravel -n {{ .Values.namespace }}

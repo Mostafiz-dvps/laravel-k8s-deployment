@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "laravel.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "laravel.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "laravel.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "laravel.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      initContainers:
+        - name: laravel-init
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              mkdir -p /var/www/html/storage/framework/sessions \
+                /var/www/html/storage/framework/views \
+                /var/www/html/storage/framework/cache \
+                /var/www/html/storage/logs \
+                /var/www/html/bootstrap/cache
+              chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+              php artisan config:cache
+              php artisan route:cache
+              php artisan storage:link || true
+          envFrom:
+            - configMapRef:
+                name: {{ include "laravel.fullname" . }}
+            - secretRef:
+                name: {{ include "laravel.fullname" . }}
+          volumeMounts:
+            - name: laravel-storage
+              mountPath: {{ .Values.storage.mountPath }}
+      containers:
+        - name: laravel
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "laravel.fullname" . }}
+            - secretRef:
+                name: {{ include "laravel.fullname" . }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: 8080
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: 8080
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: laravel-storage
+              mountPath: {{ .Values.storage.mountPath }}
+      volumes:
+        - name: laravel-storage
+          {{- if .Values.storage.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "laravel.fullname" . }}-storage
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
