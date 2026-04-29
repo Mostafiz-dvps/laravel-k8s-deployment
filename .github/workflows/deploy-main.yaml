@@ -4,9 +4,6 @@ on:
   pull_request:
     branches: [main]
     types: [closed]
-    paths:
-      - 'app/**'
-      - 'helm/**'
 
 permissions:
   contents: read
@@ -16,7 +13,7 @@ permissions:
 
 jobs:
   docker-push:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'Deploy to prod')
     uses: ./.github/workflows/callable-docker-push.yaml
     with:
       ENV_VARIABLES_PATH: ".github/variables/laravel.env"
@@ -26,7 +23,7 @@ jobs:
 
   helm-deploy:
     needs: docker-push
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'Deploy to prod')
     uses: ./.github/workflows/callable-helm-deploy.yaml
     with:
       ENV_VARIABLES_PATH: ".github/variables/laravel.env"
