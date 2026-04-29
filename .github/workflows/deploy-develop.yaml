@@ -1,0 +1,37 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'app/**'
+      - 'helm/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v3
+      - run: helm lint ./helm/laravel
+
+  docker-push:
+    needs: lint
+    uses: ./.github/workflows/callable-docker-push.yaml
+    with:
+      image_tag: ${{ github.sha }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  sonarqube:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

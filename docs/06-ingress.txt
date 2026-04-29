@@ -1,0 +1,2 @@
+NAMESPACE   NAME          CLASS   HOSTS                ADDRESS         PORTS   AGE
+laravel     laravel-app   nginx   laravel-test.local   10.216.25.185   80      16m
