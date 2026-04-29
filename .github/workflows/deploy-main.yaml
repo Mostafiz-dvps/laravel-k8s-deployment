@@ -8,6 +8,12 @@ on:
       - 'app/**'
       - 'helm/**'
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  id-token: write
+
 jobs:
   docker-push:
     if: github.event.pull_request.merged == true
