@@ -3,8 +3,6 @@ name: Deploy to Dev
 on:
   push:
     branches: [develop]
-    paths:
-      - 'app/**'
 
 permissions:
   contents: read
@@ -22,6 +20,7 @@ jobs:
 
   docker-push:
     needs: lint
+    if: contains(github.event.head_commit.message, 'Deploy to dev')
     uses: ./.github/workflows/callable-docker-push.yaml
     with:
       ENV_VARIABLES_PATH: ".github/variables/laravel.env"
