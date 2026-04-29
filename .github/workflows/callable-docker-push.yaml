@@ -39,7 +39,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  security-scan:
+  trivy-scan:
     needs: docker-push
     runs-on: ubuntu-latest
     steps:
