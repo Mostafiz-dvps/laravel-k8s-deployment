@@ -22,6 +22,8 @@ ingress:
   tls: true
   tlsSecret: laravel-tls
   certIssuer: selfsigned-issuer
+  sslRedirect: "false"
+  forceSSLRedirect: "false"
 
 app:
   env: production
@@ -77,3 +79,4 @@ readinessProbe:
   periodSeconds: 5
   timeoutSeconds: 3
   failureThreshold: 3
+

@@ -8,10 +8,10 @@ metadata:
     {{- include "laravel.labels" . | nindent 4 }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "{{ .Values.ingress.sslRedirect | default "false" }}"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "{{ .Values.ingress.forceSSLRedirect | default "false" }}"
     {{- if .Values.ingress.tls }}
     cert-manager.io/cluster-issuer: {{ .Values.ingress.certIssuer }}
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
@@ -24,6 +24,15 @@ spec:
   rules:
     - host: {{ .Values.ingress.host }}
       http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "laravel.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+    - http:
         paths:
           - path: /
             pathType: Prefix
