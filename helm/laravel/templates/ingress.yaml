@@ -8,8 +8,19 @@ metadata:
     {{- include "laravel.labels" . | nindent 4 }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    {{- if .Values.ingress.tls }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.certIssuer }}
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tlsSecret }}
+  {{- end }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:

@@ -19,12 +19,14 @@ ingress:
   enabled: true
   className: nginx
   host: laravel-test.local
-  tls: false
+  tls: true
+  tlsSecret: laravel-tls
+  certIssuer: selfsigned-issuer
 
 app:
   env: production
   debug: "false"
-  url: "http://laravel-test.local"
+  url: "https://laravel-test.local"
   logChannel: stderr
   sessionDriver: file
 
