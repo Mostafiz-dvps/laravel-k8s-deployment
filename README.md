@@ -42,6 +42,30 @@ laravel-k8s-deployment/
 - **Full URL:** `docker.io/mostafiz01/laravel-k8s:1.0.0`
 - **Pull command:** `docker pull mostafiz01/laravel-k8s:1.0.0`
 
+
+## CI/CD Pipeline Notes
+
+### Dev Pipeline (develop branch)
+Lint and Docker build+push work fully automated via GitHub Actions.
+Trivy security scan runs after every successful build.
+
+### Production Pipeline (PR merge to main)
+Docker build and push works fully. The `helm-deploy` job requires
+access to the Kubernetes cluster from the GitHub Actions runner.
+Since this is a local kubeadm cluster running on Multipass VMs,
+the GitHub Actions runner cannot reach it directly.
+
+**In a real production setup this would be solved by:**
+- Self-hosted GitHub Actions runner inside the cluster network
+- VPN tunnel between GitHub Actions and the cluster
+- Cloud-based cluster (AKS/EKS/GKE) with public API endpoint
+
+For this assignment, helm deployment is done manually:
+```bash
+helm upgrade --install laravel ./helm/laravel \
+  --set secret.appKey="<APP_KEY>"
+```
+
 ## Architecture Overview
 Developer → GitHub → GitHub Actions → Docker Hub → Kubernetes Cluster
 │
