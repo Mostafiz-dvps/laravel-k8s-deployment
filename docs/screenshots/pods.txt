@@ -1,0 +1,38 @@
+NAMESPACE            NAME                                                   READY   STATUS      RESTARTS         AGE
+cert-manager         cert-manager-5bfbf647cb-k2frz                          1/1     Running     0                4h26m
+cert-manager         cert-manager-cainjector-76995fcb6f-bnx7s               1/1     Running     0                4h26m
+cert-manager         cert-manager-webhook-6ff5c96c9f-96hd9                  1/1     Running     0                4h26m
+ingress-nginx        ingress-nginx-admission-create-cs6ph                   0/1     Completed   0                2d5h
+ingress-nginx        ingress-nginx-admission-patch-twms6                    0/1     Completed   2                2d5h
+ingress-nginx        ingress-nginx-controller-78f9c659f6-ts5f6              1/1     Running     3 (4h35m ago)    2d5h
+kube-system          calico-kube-controllers-6df7596dbd-4dtt5               1/1     Running     6 (4h35m ago)    2d5h
+kube-system          calico-node-6j5pl                                      1/1     Running     3 (4h35m ago)    2d5h
+kube-system          calico-node-6r75b                                      1/1     Running     3 (4h35m ago)    2d5h
+kube-system          calico-node-cxc66                                      1/1     Running     3 (4h35m ago)    2d5h
+kube-system          coredns-55cb58b774-s4tlv                               1/1     Running     3 (4h35m ago)    2d5h
+kube-system          coredns-55cb58b774-sj54s                               1/1     Running     3 (4h35m ago)    2d5h
+kube-system          etcd-k8s-cp1                                           1/1     Running     9 (4h35m ago)    2d5h
+kube-system          etcd-k8s-cp2                                           1/1     Running     3 (4h35m ago)    2d5h
+kube-system          kube-apiserver-k8s-cp1                                 1/1     Running     12 (4h34m ago)   2d5h
+kube-system          kube-apiserver-k8s-cp2                                 1/1     Running     5 (4h35m ago)    2d5h
+kube-system          kube-controller-manager-k8s-cp1                        1/1     Running     11 (4h35m ago)   2d5h
+kube-system          kube-controller-manager-k8s-cp2                        1/1     Running     5 (4h35m ago)    2d5h
+kube-system          kube-proxy-kr7gw                                       1/1     Running     3 (4h35m ago)    2d5h
+kube-system          kube-proxy-qm2vg                                       1/1     Running     3 (4h35m ago)    2d5h
+kube-system          kube-proxy-s5jbp                                       1/1     Running     3 (4h35m ago)    2d5h
+kube-system          kube-scheduler-k8s-cp1                                 1/1     Running     12 (4h35m ago)   2d5h
+kube-system          kube-scheduler-k8s-cp2                                 1/1     Running     6 (4h35m ago)    2d5h
+laravel              laravel-app-7f885c4ffd-pq2dk                           1/1     Running     0                24m
+laravel              laravel-app-7f885c4ffd-zq2ww                           1/1     Running     0                25m
+local-path-storage   local-path-provisioner-7d6d74594b-5z4hn                1/1     Running     2 (4h35m ago)    2d
+metallb-system       controller-7f85777fb-xfvxd                             1/1     Running     0                3h4m
+metallb-system       speaker-2mz9t                                          1/1     Running     0                3h4m
+metallb-system       speaker-brl98                                          1/1     Running     0                3h4m
+metallb-system       speaker-c4r6b                                          1/1     Running     0                3h4m
+monitoring           monitoring-grafana-6dfdcdc466-hrx97                    3/3     Running     0                4h11m
+monitoring           monitoring-kube-prometheus-operator-6c45758f95-gqfp7   1/1     Running     0                4h11m
+monitoring           monitoring-kube-state-metrics-8c945547d-2n84f          1/1     Running     0                4h11m
+monitoring           monitoring-prometheus-node-exporter-p42cm              1/1     Running     0                4h11m
+monitoring           monitoring-prometheus-node-exporter-rgj2f              1/1     Running     0                4h11m
+monitoring           monitoring-prometheus-node-exporter-scmtt              1/1     Running     0                4h11m
+monitoring           prometheus-monitoring-kube-prometheus-prometheus-0     2/2     Running     0                4h10m
