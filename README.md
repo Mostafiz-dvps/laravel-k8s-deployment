@@ -71,7 +71,6 @@ A self-hosted runner runs on the host machine with direct kubeconfig access to t
 
 
 
-
 ## Architecture Overview
 Developer → GitHub → GitHub Actions → Docker Hub → Kubernetes Cluster
 │
@@ -244,27 +243,24 @@ helm uninstall laravel -n laravel
 
 ## Testing
 
-### Get NodePort and Worker IP
+### Option 0 — MetalLB LoadBalancer (Direct)
 
 ```bash
-WORKER_IP=10.216.25.185
-NODE_PORT=$(kubectl get svc -n ingress-nginx ingress-nginx-controller \
-  -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
 ```
 
 ### Option 1 — curl with Host header
 
 ```bash
-curl -H "Host: laravel-test.local" http://$WORKER_IP:$NODE_PORT/
-curl -H "Host: laravel-test.local" http://$WORKER_IP:$NODE_PORT/health
+curl -H "Host: laravel-test.local" http://10.216.25.200/
+curl -H "Host: laravel-test.local" http://10.216.25.200/health
 ```
 
 ### Option 2 — /etc/hosts
 
 ```bash
 echo "10.216.25.185 laravel-test.local" | sudo tee -a /etc/hosts
-curl http://laravel-test.local:$NODE_PORT/
-curl http://laravel-test.local:$NODE_PORT/health
+curl http://10.216.25.200/
+curl http://10.216.25.200/health
 ```
 
 Expected responses:
@@ -377,7 +373,7 @@ No default StorageClass on bare kubeadm.
 ### Infrastructure
 - Use Terraform to provision VMs and Kubernetes cluster
 - Use Ansible for node configuration instead of manual kubeadm setup
-- Add cert-manager for automatic TLS with Let's Encrypt
+- cert-manager already installed with self-signed issuer — upgrade to Let's Encrypt for production
 - Implement WAF (ModSecurity/NAXSI) at ingress level
 
 ### Kubernetes
