@@ -2,6 +2,46 @@
 
 A production-ready Laravel application deployed on a kubeadm Kubernetes cluster using Docker and Helm.
 
+
+## Repository Structure
+laravel-k8s-deployment/
+├── app/                          # Laravel application
+│   ├── Dockerfile                # Multi-stage production Dockerfile
+│   ├── .dockerignore
+│   ├── docker/                   # Nginx, PHP-FPM, Supervisor configs
+│   └── routes/web.php            # App routes including /health
+├── helm/laravel/                 # Helm chart
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/
+│       ├── deployment.yaml
+│       ├── service.yaml
+│       ├── ingress.yaml
+│       ├── configmap.yaml
+│       ├── secret.yaml
+│       ├── pvc.yaml
+│       ├── namespace.yaml
+│       ├── hpa.yaml
+│       ├── pdb.yaml
+│       ├── networkpolicy.yaml
+│       └── serviceaccount.yaml
+├── .github/
+│   ├── actions/setvars/          # Reusable env vars action
+│   ├── variables/laravel.env     # Pipeline variables (non-sensitive)
+│   └── workflows/
+│       ├── deploy-develop.yaml         # Push to develop → lint + build
+│       ├── deploy-main.yaml            # PR merge to main → build + deploy
+│       ├── callable-docker-push.yaml   # Reusable build + push + trivy
+│       └── callable-helm-deploy.yaml   # Reusable helm deploy
+├── docs/screenshots/             # Cluster verification screenshots
+└── README.md
+## Docker Image
+
+- **Repository:** `mostafiz01/laravel-k8s`
+- **Tag:** `1.0.0`
+- **Full URL:** `docker.io/mostafiz01/laravel-k8s:1.0.0`
+- **Pull command:** `docker pull mostafiz01/laravel-k8s:1.0.0`
+
 ## Architecture Overview
 Developer → GitHub → GitHub Actions → Docker Hub → Kubernetes Cluster
 │
