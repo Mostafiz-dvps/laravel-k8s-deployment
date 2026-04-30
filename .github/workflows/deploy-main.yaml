@@ -12,21 +12,52 @@ permissions:
   id-token: write
 
 jobs:
-  docker-push:
+  helm-lint:
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'Deploy to prod')
-    uses: ./.github/workflows/callable-docker-push.yaml
-    with:
-      ENV_VARIABLES_PATH: ".github/variables/laravel.env"
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        uses: ./.github/actions/setvars
+        with:
+          varFilePath: .github/variables/laravel.env
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+
+      - name: Helm Lint
+        run: helm lint ./${{ env.HELM_TEMPLATE }}
 
   helm-deploy:
-    needs: docker-push
+    needs: helm-lint
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.title, 'Deploy to prod')
-    uses: ./.github/workflows/callable-helm-deploy.yaml
-    with:
-      ENV_VARIABLES_PATH: ".github/variables/laravel.env"
-      environment: production
-    secrets:
-      APP_KEY: ${{ secrets.APP_KEY }}
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        uses: ./.github/actions/setvars
+        with:
+          varFilePath: .github/variables/laravel.env
+
+      - name: Deploy
+        run: |
+          helm upgrade --install ${{ env.HELM_RELEASE }} ./${{ env.HELM_TEMPLATE }} \
+            --namespace ${{ env.NAMESPACE }} \
+            --create-namespace \
+            --set image.tag="${{ env.IMAGE_VERSION }}" \
+            --set secret.appKey="${{ secrets.APP_KEY }}" \
+            --set ingress.host="${{ env.INGRESS_HOST }}" \
+            --kubeconfig ~/.kube/config-k8s-assignment \
+            --atomic \
+            --timeout 5m
+
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/laravel-app \
+            -n ${{ env.NAMESPACE }} \
+            --kubeconfig ~/.kube/config-k8s-assignment \
+            --timeout=5m
