@@ -10,6 +10,7 @@ A production-ready Laravel application deployed on a kubeadm Kubernetes cluster 
 
 
 ## Repository Structure
+```
 laravel-k8s-deployment/
 ├── app/                          # Laravel application
 │   ├── Dockerfile                # Multi-stage production Dockerfile
@@ -41,6 +42,7 @@ laravel-k8s-deployment/
 │       └── callable-helm-deploy.yaml   # Reusable helm deploy
 ├── docs/screenshots/             # Cluster verification screenshots
 └── README.md
+```
 ## Docker Image
 
 - **Repository:** `mostafiz01/laravel-k8s`
