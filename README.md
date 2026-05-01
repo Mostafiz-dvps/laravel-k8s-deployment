@@ -6,7 +6,9 @@ A production-ready Laravel application deployed on a kubeadm Kubernetes cluster 
 - **Public URL:** https://cents-incl-returning-spirit.trycloudflare.com
 - **Health Check:** https://cents-incl-returning-spirit.trycloudflare.com/health
 
-> Note: URL is served via Cloudflare Tunnel and may change on host restart.
+> Note: All URLs are served via Cloudflare Tunnel and may change on host restart.
+- **Grafana Monitoring:** https://source-heat-supplier-dsl.trycloudflare.com
+  - Credentials will be shared separately upon request.
 
 
 ## Repository Structure
