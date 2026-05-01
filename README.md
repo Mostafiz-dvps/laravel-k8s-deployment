@@ -3,8 +3,8 @@
 A production-ready Laravel application deployed on a kubeadm Kubernetes cluster using Docker and Helm.
 
 ## Live Demo
-- **Public URL:** https://planning-contains-suite-clear.trycloudflare.com
-- **Health Check:** https://planning-contains-suite-clear.trycloudflare.com/health
+- **Public URL:** https://cents-incl-returning-spirit.trycloudflare.com
+- **Health Check:** https://cents-incl-returning-spirit.trycloudflare.com/health
 
 > Note: URL is served via Cloudflare Tunnel and may change on host restart.
 
