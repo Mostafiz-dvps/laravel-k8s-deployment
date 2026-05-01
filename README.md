@@ -48,9 +48,9 @@ laravel-k8s-deployment/
 ## Docker Image
 
 - **Repository:** `mostafiz01/laravel-k8s`
-- **Tag:** `1.0.0`
-- **Full URL:** `docker.io/mostafiz01/laravel-k8s:1.0.0`
-- **Pull command:** `docker pull mostafiz01/laravel-k8s:1.0.0`
+- **Tag:** `1.0.5`
+- **Full URL:** `docker.io/mostafiz01/laravel-k8s:1.0.5`
+- **Pull command:** `docker pull mostafiz01/laravel-k8s:1.0.5`
 
 
 ## CI/CD Pipeline Notes
