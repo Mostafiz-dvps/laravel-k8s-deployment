@@ -320,7 +320,7 @@ or Sealed Secrets / SOPS for GitOps-safe secret storage.
 
 ### containerd not found after install
 Ubuntu's default containerd package (2.2.x) is incompatible with kubeadm 1.30.
-**Fix:** Install `containerd.io` from Docker's official repo instead.
+**Fix:** Install `containerd.io` from Docker's official repo instead. 
 
 ### KVM not available after reboot
 KVM modules are not loaded by default after reboot.
