@@ -2,6 +2,12 @@
 
 A production-ready Laravel application deployed on a kubeadm Kubernetes cluster using Docker and Helm.
 
+## Live Demo
+- **Public URL:** https://planning-contains-suite-clear.trycloudflare.com
+- **Health Check:** https://planning-contains-suite-clear.trycloudflare.com/health
+
+> Note: URL is served via Cloudflare Tunnel and may change on host restart.
+
 
 ## Repository Structure
 laravel-k8s-deployment/
@@ -50,21 +56,20 @@ Lint and Docker build+push work fully automated via GitHub Actions.
 Trivy security scan runs after every successful build.
 
 ### Production Pipeline (PR merge to main)
-Docker build and push works fully. The `helm-deploy` job requires
-access to the Kubernetes cluster from the GitHub Actions runner.
-Since this is a local kubeadm cluster running on Multipass VMs,
-the GitHub Actions runner cannot reach it directly.
+Docker build, push and helm deploy are fully automated via GitHub Actions.
+A self-hosted runner runs on the host machine with direct kubeconfig access to the cluster.
 
-**In a real production setup this would be solved by:**
-- Self-hosted GitHub Actions runner inside the cluster network
-- VPN tunnel between GitHub Actions and the cluster
-- Cloud-based cluster (AKS/EKS/GKE) with public API endpoint
 
-For this assignment, helm deployment is done manually:
-```bash
-helm upgrade --install laravel ./helm/laravel \
-  --set secret.appKey="<APP_KEY>"
-```
+
+
+
+
+
+
+
+
+
+
 
 ## Architecture Overview
 Developer → GitHub → GitHub Actions → Docker Hub → Kubernetes Cluster
@@ -93,6 +98,9 @@ laravel-app
 - **Ingress:** ingress-nginx v1.10.0
 - **CRI:** containerd 2.2.3
 - **StorageClass:** local-path-provisioner v0.0.26
+- **LoadBalancer:** MetalLB v0.14.3 (IP pool: 10.216.25.200-220)
+- **TLS:** cert-manager v1.14.0 (self-signed ClusterIssuer)
+- **Monitoring:** kube-prometheus-stack (Grafana + Prometheus)
 
 ## Prerequisites
 
@@ -235,27 +243,24 @@ helm uninstall laravel -n laravel
 
 ## Testing
 
-### Get NodePort and Worker IP
+### Option 0 — MetalLB LoadBalancer (Direct)
 
 ```bash
-WORKER_IP=10.216.25.185
-NODE_PORT=$(kubectl get svc -n ingress-nginx ingress-nginx-controller \
-  -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
 ```
 
 ### Option 1 — curl with Host header
 
 ```bash
-curl -H "Host: laravel-test.local" http://$WORKER_IP:$NODE_PORT/
-curl -H "Host: laravel-test.local" http://$WORKER_IP:$NODE_PORT/health
+curl -H "Host: laravel-test.local" http://10.216.25.200/
+curl -H "Host: laravel-test.local" http://10.216.25.200/health
 ```
 
 ### Option 2 — /etc/hosts
 
 ```bash
 echo "10.216.25.185 laravel-test.local" | sudo tee -a /etc/hosts
-curl http://laravel-test.local:$NODE_PORT/
-curl http://laravel-test.local:$NODE_PORT/health
+curl http://10.216.25.200/
+curl http://10.216.25.200/health
 ```
 
 Expected responses:
@@ -315,7 +320,7 @@ or Sealed Secrets / SOPS for GitOps-safe secret storage.
 
 ### containerd not found after install
 Ubuntu's default containerd package (2.2.x) is incompatible with kubeadm 1.30.
-**Fix:** Install `containerd.io` from Docker's official repo instead.
+**Fix:** Install `containerd.io` from Docker's official repo instead. 
 
 ### KVM not available after reboot
 KVM modules are not loaded by default after reboot.
@@ -354,7 +359,7 @@ No default StorageClass on bare kubeadm.
 - Single namespace (`laravel`) for all application resources
 - SQLite not used — SESSION_DRIVER=file, no external database for this demo
 - local-path StorageClass used for PVC — data is node-local, not replicated
-- ingress-nginx uses NodePort (no LoadBalancer on bare metal)
+- ingress-nginx uses MetalLB LoadBalancer (IP: 10.216.25.200)
 - APP_KEY passed at install time, not stored in repo
 
 ## Production Improvement Suggestions
@@ -368,7 +373,7 @@ No default StorageClass on bare kubeadm.
 ### Infrastructure
 - Use Terraform to provision VMs and Kubernetes cluster
 - Use Ansible for node configuration instead of manual kubeadm setup
-- Add cert-manager for automatic TLS with Let's Encrypt
+- cert-manager already installed with self-signed issuer — upgrade to Let's Encrypt for production
 - Implement WAF (ModSecurity/NAXSI) at ingress level
 
 ### Kubernetes
@@ -386,7 +391,7 @@ No default StorageClass on bare kubeadm.
 - Regular image vulnerability scanning with Trivy in CI
 
 ### Monitoring
-- Deploy Prometheus + Grafana stack for metrics and alerting
+- Prometheus + Grafana already deployed via kube-prometheus-stack
 - Add Sentry for application error tracking
 - Implement centralized log aggregation (ELK or Graylog)
 - Set up uptime monitoring and SLA dashboards
