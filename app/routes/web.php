@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return 'Laravel Kubernetes Deployment Test';
+    return view('welcome');
 });
 
 Route::get('/health', function () {
