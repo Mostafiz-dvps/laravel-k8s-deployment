@@ -21,6 +21,8 @@
 
 > All endpoints served via **Cloudflare Tunnel**. URLs may change on host restart (bare-metal constraint).
 
+![Laravel App Live](docs/screenshots/07-laravel-page.png)
+
 ---
 
 ## 🏗️ Architecture
@@ -68,6 +70,8 @@ graph TD
 | k8s-cp2 | control-plane | 10.216.25.60 | v1.30.14 |
 | k8s-worker1 | worker | 10.216.25.185 | v1.30.14 |
 
+![Cluster Nodes](docs/screenshots/01-nodes.png)
+
 | Component | Version |
 |---|---|
 | CNI | Calico v3.27.0 |
@@ -77,6 +81,14 @@ graph TD
 | LoadBalancer | MetalLB v0.14.3 (pool: 10.216.25.200–220) |
 | TLS | cert-manager v1.14.0 (self-signed ClusterIssuer) |
 | Monitoring | kube-prometheus-stack (Grafana + Prometheus) |
+
+### Cluster Verification
+
+![Cluster Info](docs/screenshots/03-cluster-info.png)
+
+![All Pods Running](docs/screenshots/02-pods.png)
+
+![Ingress-Nginx Pods](docs/screenshots/04-ingress-nginx.png)
 
 ---
 
@@ -364,6 +376,10 @@ No default StorageClass on bare kubeadm. Install `local-path-provisioner` and se
 | **TLS** | Upgrade cert-manager issuer to Let's Encrypt |
 | **Security** | WAF (ModSecurity) at ingress; Pod Security Admission; egress NetworkPolicy per service |
 | **Observability** | Sentry for app errors; ELK/Graylog for centralized logs; SLA dashboards |
+
+### Monitoring (Grafana + Prometheus)
+
+![Grafana Cluster Monitoring](docs/screenshots/06-grafana-coredns.png)
 | **Deployments** | Blue-green via ingress weight splitting; Vertical Pod Autoscaler |
 | **CI/CD** | SonarQube for static analysis; OWASP dependency check; branch protection rules |
 
