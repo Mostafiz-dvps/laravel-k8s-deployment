@@ -18,7 +18,6 @@
 |---|---|
 | Application | https://dept-boc-trace-explore.trycloudflare.com |
 | Health Check | https://dept-boc-trace-explore.trycloudflare.com/health |
-| Grafana | https://source-heat-supplier-dsl.trycloudflare.com |
 
 > All endpoints served via **Cloudflare Tunnel**. URLs may change on host restart (bare-metal constraint).
 
