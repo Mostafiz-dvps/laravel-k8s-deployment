@@ -1,17 +1,88 @@
 # Laravel Kubernetes Deployment
 
-A production-ready Laravel application deployed on a kubeadm Kubernetes cluster using Docker and Helm.
+![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.30-326CE5?logo=kubernetes&logoColor=white)
+![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-PHP-FF2D20?logo=laravel&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Hub-2496ED?logo=docker&logoColor=white)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+![Security](https://img.shields.io/badge/Security-Trivy-1904DA?logo=aqua&logoColor=white)
+![Monitoring](https://img.shields.io/badge/Monitoring-Grafana%20%2B%20Prometheus-F46800?logo=grafana&logoColor=white)
 
-## Live Demo
-- **Public URL:** https://dept-boc-trace-explore.trycloudflare.com
-- **Health Check:** https://cents-incl-returning-spirit.trycloudflare.com/health
+> Production-ready Laravel application deployed on a **self-managed HA kubeadm Kubernetes cluster** (2 control planes + 1 worker) using Docker, Helm, and GitHub Actions CI/CD. Built from scratch — no managed cloud Kubernetes.
 
-> Note: All URLs are served via Cloudflare Tunnel and may change on host restart.
-- **Grafana Monitoring:** https://source-heat-supplier-dsl.trycloudflare.com
-  - Credentials will be shared separately upon request.
+---
 
+## 🌐 Live Demo
 
-## Repository Structure
+| Endpoint | URL |
+|---|---|
+| Application | https://dept-boc-trace-explore.trycloudflare.com |
+| Health Check | https://cents-incl-returning-spirit.trycloudflare.com/health |
+| Grafana | https://source-heat-supplier-dsl.trycloudflare.com |
+
+> All endpoints served via **Cloudflare Tunnel**. URLs may change on host restart (bare-metal constraint).
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    Dev["👨‍💻 Developer"] -->|git push| GH["GitHub"]
+    GH -->|GitHub Actions| CI["CI/CD Pipeline"]
+    CI -->|docker build + push| DH["Docker Hub\nmostafiz01/laravel-k8s"]
+    CI -->|helm deploy| K8S
+
+    subgraph K8S["☸️ Kubernetes Cluster (kubeadm)"]
+        direction TB
+        CF["Cloudflare Tunnel"] --> ING["ingress-nginx\nMetalLB 10.216.25.200"]
+        ING --> APP["laravel-app\n2 Replicas + HPA"]
+        APP --> PVC["PVC\nlocal-path-provisioner"]
+
+        subgraph CP["Control Plane (HA)"]
+            CP1["k8s-cp1\n10.216.25.161"]
+            CP2["k8s-cp2\n10.216.25.60"]
+        end
+
+        subgraph WK["Worker"]
+            W1["k8s-worker1\n10.216.25.185"]
+        end
+
+        subgraph OPS["Platform"]
+            MON["Prometheus + Grafana"]
+            TLS["cert-manager"]
+            NET["Calico CNI"]
+            LB["MetalLB"]
+        end
+    end
+
+    DH --> K8S
+```
+
+---
+
+## 🖥️ Cluster Specification
+
+| Node | Role | IP | K8s Version |
+|---|---|---|---|
+| k8s-cp1 | control-plane | 10.216.25.161 | v1.30.14 |
+| k8s-cp2 | control-plane | 10.216.25.60 | v1.30.14 |
+| k8s-worker1 | worker | 10.216.25.185 | v1.30.14 |
+
+| Component | Version |
+|---|---|
+| CNI | Calico v3.27.0 |
+| Ingress | ingress-nginx v1.10.0 |
+| CRI | containerd 2.2.3 |
+| StorageClass | local-path-provisioner v0.0.26 |
+| LoadBalancer | MetalLB v0.14.3 (pool: 10.216.25.200–220) |
+| TLS | cert-manager v1.14.0 (self-signed ClusterIssuer) |
+| Monitoring | kube-prometheus-stack (Grafana + Prometheus) |
+
+---
+
+## 📁 Repository Structure
+
 ```
 laravel-k8s-deployment/
 ├── app/                          # Laravel application
@@ -30,9 +101,9 @@ laravel-k8s-deployment/
 │       ├── secret.yaml
 │       ├── pvc.yaml
 │       ├── namespace.yaml
-│       ├── hpa.yaml
-│       ├── pdb.yaml
-│       ├── networkpolicy.yaml
+│       ├── hpa.yaml              # Horizontal Pod Autoscaler
+│       ├── pdb.yaml              # Pod Disruption Budget
+│       ├── networkpolicy.yaml    # Network isolation
 │       └── serviceaccount.yaml
 ├── .github/
 │   ├── actions/setvars/          # Reusable env vars action
@@ -40,114 +111,88 @@ laravel-k8s-deployment/
 │   └── workflows/
 │       ├── deploy-develop.yaml         # Push to develop → lint + build
 │       ├── deploy-main.yaml            # PR merge to main → build + deploy
-│       ├── callable-docker-push.yaml   # Reusable build + push + trivy
-│       └── callable-helm-deploy.yaml   # Reusable helm deploy
+│       ├── callable-docker-push.yaml   # Reusable: build + push + Trivy scan
+│       └── callable-helm-deploy.yaml   # Reusable: helm deploy
 ├── docs/screenshots/             # Cluster verification screenshots
 └── README.md
 ```
-## Docker Image
 
-- **Repository:** `mostafiz01/laravel-k8s`
-- **Tag:** `1.0.5`
-- **Full URL:** `docker.io/mostafiz01/laravel-k8s:1.0.5`
-- **Pull command:** `docker pull mostafiz01/laravel-k8s:1.0.5`
+---
 
+## 🔄 CI/CD Pipeline
 
-## CI/CD Pipeline Notes
+```mermaid
+flowchart LR
+    A["push to\ndevelop"] --> B["Helm Lint"]
+    B --> C["Docker Build + Push"]
+    C --> D["Trivy Security Scan"]
 
-### Dev Pipeline (develop branch)
-Lint and Docker build+push work fully automated via GitHub Actions.
-Trivy security scan runs after every successful build.
+    E["PR merge\nto main"] --> F["Docker Build + Push"]
+    F --> G["Trivy Security Scan"]
+    G --> H["Helm Deploy\nto Production"]
+    H --> I["Self-hosted Runner\n(direct kubeconfig)"]
+```
 
-### Production Pipeline (PR merge to main)
-Docker build, push and helm deploy are fully automated via GitHub Actions.
-A self-hosted runner runs on the host machine with direct kubeconfig access to the cluster.
+| Branch | Trigger | Actions |
+|---|---|---|
+| `develop` | Push | Helm lint → Docker build/push → Trivy scan |
+| `main` | PR merge | Docker build/push → Trivy scan → Helm deploy |
 
+### Required GitHub Secrets
 
+| Secret | Description |
+|---|---|
+| `DOCKERHUB_USERNAME` | Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub PAT |
+| `APP_KEY` | Laravel APP_KEY |
 
+> `APP_KEY` is passed via `--set` at helm install time and stored in a Kubernetes Secret. It is never committed to the repository.
 
+---
 
+## 🚀 Getting Started
 
+### Prerequisites
 
-
-
-
-
-
-
-## Architecture Overview
-Developer → GitHub → GitHub Actions → Docker Hub → Kubernetes Cluster
-│
-┌──────────┴──────────┐
-│                     │
-k8s-cp1              k8s-cp2
-(control-plane)      (control-plane)
-│
-k8s-worker1
-(worker)
-│
-ingress-nginx
-│
-laravel-app
-(2 replicas)
-## Cluster Details
-
-| Node | Role | IP | Version |
-|---|---|---|---|
-| k8s-cp1 | control-plane | 10.216.25.161 | v1.30.14 |
-| k8s-cp2 | control-plane | 10.216.25.60 | v1.30.14 |
-| k8s-worker1 | worker | 10.216.25.185 | v1.30.14 |
-
-- **CNI:** Calico v3.27.0
-- **Ingress:** ingress-nginx v1.10.0
-- **CRI:** containerd 2.2.3
-- **StorageClass:** local-path-provisioner v0.0.26
-- **LoadBalancer:** MetalLB v0.14.3 (IP pool: 10.216.25.200-220)
-- **TLS:** cert-manager v1.14.0 (self-signed ClusterIssuer)
-- **Monitoring:** kube-prometheus-stack (Grafana + Prometheus)
-
-## Prerequisites
-
-- Ubuntu 24.04 host machine
-- Multipass installed (`sudo snap install multipass`)
+- Ubuntu 24.04 host
+- `multipass` installed (`sudo snap install multipass`)
 - KVM enabled (`sudo modprobe kvm && sudo modprobe kvm_intel`)
-- Docker installed
-- Helm v3 installed
-- kubectl installed
-
-## Cluster Setup Steps
+- `docker`, `helm v3`, `kubectl` installed
 
 ### 1. Launch VMs
 
 ```bash
-multipass launch --name k8s-cp1 --cpus 2 --memory 3G --disk 20G 24.04
-multipass launch --name k8s-cp2 --cpus 2 --memory 3G --disk 20G 24.04
+multipass launch --name k8s-cp1    --cpus 2 --memory 3G --disk 20G 24.04
+multipass launch --name k8s-cp2    --cpus 2 --memory 3G --disk 20G 24.04
 multipass launch --name k8s-worker1 --cpus 2 --memory 4G --disk 20G 24.04
 ```
 
-### 2. Setup each node (run on all 3)
+### 2. Configure Each Node (run on all 3)
 
 ```bash
 sudo swapoff -a
 sudo modprobe overlay && sudo modprobe br_netfilter
 
-# Install containerd from Docker repo
+# Install containerd from Docker repo (Ubuntu default is incompatible with kubeadm 1.30)
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable" | sudo tee /etc/apt/sources.list.d/docker.list
+echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list
 sudo apt-get update && sudo apt-get install -y containerd.io
 sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
 sudo systemctl restart containerd
 
-# Install kubeadm kubelet kubectl
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+# Install kubeadm, kubelet, kubectl
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' \
+  | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update && sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
-### 3. Initialize control plane (cp1 only)
+### 3. Initialize Control Plane (cp1 only)
 
 ```bash
 sudo kubeadm init \
@@ -160,7 +205,7 @@ sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/calico.yaml
 ```
 
-### 4. Join cp2 (control-plane)
+### 4. Join cp2 (Control Plane)
 
 ```bash
 sudo kubeadm join 10.216.25.161:6443 \
@@ -178,28 +223,27 @@ sudo kubeadm join 10.216.25.161:6443 \
   --discovery-token-ca-cert-hash sha256:<hash>
 ```
 
-### 6. Install ingress-nginx
+### 6. Install Platform Components
 
 ```bash
+# ingress-nginx
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml
-```
 
-### 7. Install StorageClass
-
-```bash
+# local-path StorageClass (set as default)
 kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
 kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 ```
 
-## Docker Build & Push
+---
+
+## 🐳 Docker
 
 ```bash
 # Build
 docker build -t mostafiz01/laravel-k8s:1.0.0 ./app
 
 # Test locally
-docker run -d --name laravel-test \
-  -p 8080:8080 \
+docker run -d --name laravel-test -p 8080:8080 \
   -e APP_KEY="<your-app-key>" \
   -e APP_ENV=production \
   -e APP_DEBUG=false \
@@ -211,191 +255,121 @@ curl http://localhost:8080/health
 
 # Push
 docker push mostafiz01/laravel-k8s:1.0.0
-docker push mostafiz01/laravel-k8s:latest
 ```
 
-**Image:** `mostafiz01/laravel-k8s:1.0.0`
+**Docker Hub:** `docker pull mostafiz01/laravel-k8s:1.0.5`
 
-## Helm Install / Upgrade / Uninstall
+---
 
-### Generate APP_KEY
+## ⎈ Helm
 
 ```bash
+# Generate APP_KEY
 cd app && php artisan key:generate --show
-```
 
-### Install
-
-```bash
+# Install
 helm install laravel ./helm/laravel \
   --set secret.appKey="<APP_KEY>"
-```
 
-### Upgrade
-
-```bash
+# Upgrade
 helm upgrade laravel ./helm/laravel \
   --set secret.appKey="<APP_KEY>" \
   --set image.tag="<NEW_TAG>"
-```
 
-### Uninstall
-
-```bash
+# Uninstall
 helm uninstall laravel -n laravel
 ```
 
-## Testing
+---
 
-### Option 0 — MetalLB LoadBalancer (Direct)
-
-```bash
-```
-
-### Option 1 — curl with Host header
+## ✅ Testing
 
 ```bash
+# Via MetalLB LoadBalancer IP
 curl -H "Host: laravel-test.local" http://10.216.25.200/
 curl -H "Host: laravel-test.local" http://10.216.25.200/health
+
+# Via /etc/hosts
+echo "10.216.25.200 laravel-test.local" | sudo tee -a /etc/hosts
+curl http://laravel-test.local/
+curl http://laravel-test.local/health
 ```
 
-### Option 2 — /etc/hosts
-
-```bash
-echo "10.216.25.185 laravel-test.local" | sudo tee -a /etc/hosts
-curl http://10.216.25.200/
-curl http://10.216.25.200/health
-```
-
-Expected responses:
+**Expected:**
 - `/` → `Laravel Kubernetes Deployment Test`
 - `/health` → `OK` (HTTP 200)
 
-## CI/CD Pipeline
+---
 
-### Structure
-.github/workflows/
-├── deploy-develop.yaml          # triggers on push to develop
-│   ├── helm lint
-│   └── calls callable-docker-push
-├── deploy-main.yaml             # triggers on PR merge to main
-│   ├── calls callable-docker-push
-│   └── calls callable-helm-deploy
-├── callable-docker-push.yaml    # reusable build+push+scan
-└── callable-helm-deploy.yaml    # reusable helm deploy
+## 🔒 Secret Management
 
-### Flow
-push to develop → lint + build + push + Trivy scan
-PR merge to main → build + push + helm deploy to production
-### Required GitHub Secrets
+`APP_KEY` is passed via `--set` at helm install time and stored as a Kubernetes Secret. It is never committed to git or hardcoded in any file.
 
-| Secret | Description |
-|---|---|
-| `DOCKERHUB_USERNAME` | Docker Hub username |
-| `DOCKERHUB_TOKEN` | Docker Hub PAT |
-| `APP_KEY` | Laravel APP_KEY |
+**Why not Azure Key Vault?** Azure Key Vault requires Azure AD identity and the CSI driver — not available on bare kubeadm without significant additional infrastructure. For a production AKS setup, use Azure Key Vault + CSI driver + Managed Identity or Sealed Secrets / SOPS.
 
-## Secret Management
+---
 
-APP_KEY is passed via `--set` at helm install time and stored in a
-Kubernetes Secret. It is never committed to git or hardcoded in any file.
+## 🛠️ Troubleshooting
 
-### Why not Azure Key Vault or GitHub Secrets directly?
-- **GitHub Secrets** are CI/CD pipeline variables — not accessible by running pods.
-  They are used correctly here to pass APP_KEY into helm which stores it in a K8s Secret.
-- **Azure Key Vault** requires Azure AD identity and CSI driver — not available on
-  bare kubeadm without significant additional infrastructure.
+<details>
+<summary><b>containerd not found after install</b></summary>
 
-### Production approach
-Use Azure Key Vault with CSI driver and Managed Identity (AKS),
-or Sealed Secrets / SOPS for GitOps-safe secret storage.
+Ubuntu's default `containerd` package (2.2.x) is incompatible with kubeadm 1.30. Install `containerd.io` from Docker's official repo instead (see node setup steps above).
+</details>
 
-## Laravel Runtime Commands
+<details>
+<summary><b>KVM not available after reboot</b></summary>
 
-| Command | When | How |
-|---|---|---|
-| `config:cache` | Every deploy | initContainer |
-| `route:cache` | Every deploy | initContainer |
-| `storage:link` | Every deploy | initContainer |
-| `migrate` | Manual only | Never auto-run in production — data loss risk |
-| `key:generate` | Once | Run locally, store in Secret |
-
-## Troubleshooting
-
-### containerd not found after install
-Ubuntu's default containerd package (2.2.x) is incompatible with kubeadm 1.30.
-**Fix:** Install `containerd.io` from Docker's official repo instead. 
-
-### KVM not available after reboot
-KVM modules are not loaded by default after reboot.
-**Fix:**
 ```bash
 sudo modprobe kvm && sudo modprobe kvm_intel
-# Make permanent:
+# Make permanent
 echo -e "kvm\nkvm_intel" | sudo tee /etc/modules-load.d/kvm.conf
 ```
+</details>
 
-### VMs have no internet access
-Multipass VMs can't reach internet — NAT rules missing.
-**Fix:**
+<details>
+<summary><b>VMs have no internet access</b></summary>
+
 ```bash
 sudo iptables-legacy -t nat -A POSTROUTING -s 10.216.25.0/24 -o wlp0s20f3 -j MASQUERADE
 sudo iptables-legacy -A FORWARD -s 10.216.25.0/24 -j ACCEPT
 sudo netfilter-persistent save
 ```
+</details>
 
-### Pods not ready — session file error
-Laravel tries to write session files to storage directory which is
-overwritten by PVC mount.
-**Fix:** initContainer creates directory structure before app starts:
+<details>
+<summary><b>Pods not ready — session file error</b></summary>
+
+Laravel tries to write session files to a storage directory overwritten by the PVC mount. The `initContainer` creates the required directory structure before the app starts:
+
 ```bash
-mkdir -p /var/www/html/storage/framework/sessions \
-  /var/www/html/storage/framework/views \
-  /var/www/html/storage/framework/cache
+mkdir -p /var/www/html/storage/framework/{sessions,views,cache}
 ```
+</details>
 
-### PVC pending
-No default StorageClass on bare kubeadm.
-**Fix:** Install local-path-provisioner and set as default.
+<details>
+<summary><b>PVC stuck in Pending</b></summary>
 
-## Assumptions
+No default StorageClass on bare kubeadm. Install `local-path-provisioner` and set it as default (see step 6 above).
+</details>
 
-- Single namespace (`laravel`) for all application resources
-- SQLite not used — SESSION_DRIVER=file, no external database for this demo
-- local-path StorageClass used for PVC — data is node-local, not replicated
-- ingress-nginx uses MetalLB LoadBalancer (IP: 10.216.25.200)
-- APP_KEY passed at install time, not stored in repo
+---
 
-## Production Improvement Suggestions
+## 🗺️ Production Improvement Roadmap
 
-### CI/CD
-- Migrate to GitLab CI/CD for self-hosted runner support
-- Add SonarQube for static code analysis on every PR
-- Add OWASP dependency check for CVE scanning
-- Implement branch protection with required reviews before merge
+| Area | Improvement |
+|---|---|
+| **Secrets** | Sealed Secrets / SOPS for GitOps-safe storage; Azure Key Vault + CSI on AKS |
+| **Database** | External PostgreSQL + Redis for sessions/cache |
+| **Infra-as-Code** | Terraform for VM provisioning; Ansible for node config |
+| **TLS** | Upgrade cert-manager issuer to Let's Encrypt |
+| **Security** | WAF (ModSecurity) at ingress; Pod Security Admission; egress NetworkPolicy per service |
+| **Observability** | Sentry for app errors; ELK/Graylog for centralized logs; SLA dashboards |
+| **Deployments** | Blue-green via ingress weight splitting; Vertical Pod Autoscaler |
+| **CI/CD** | SonarQube for static analysis; OWASP dependency check; branch protection rules |
 
-### Infrastructure
-- Use Terraform to provision VMs and Kubernetes cluster
-- Use Ansible for node configuration instead of manual kubeadm setup
-- cert-manager already installed with self-signed issuer — upgrade to Let's Encrypt for production
-- Implement WAF (ModSecurity/NAXSI) at ingress level
+---
 
-### Kubernetes
-- External PostgreSQL database instead of SQLite
-- Redis for session and cache management
-- Horizontal Pod Autoscaler already included
-- Add Vertical Pod Autoscaler for right-sizing
-- Implement blue-green deployments via ingress weight splitting
+## 📄 License
 
-### Security
-- Azure Key Vault with CSI driver for secret management (AKS)
-- Sealed Secrets or SOPS for GitOps-safe secret storage
-- Network policies already included — extend to restrict egress per service
-- Pod Security Admission for namespace-level security standards
-- Regular image vulnerability scanning with Trivy in CI
-
-### Monitoring
-- Prometheus + Grafana already deployed via kube-prometheus-stack
-- Add Sentry for application error tracking
-- Implement centralized log aggregation (ELK or Graylog)
-- Set up uptime monitoring and SLA dashboards
+MIT
