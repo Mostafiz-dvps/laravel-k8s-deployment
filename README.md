@@ -3,7 +3,7 @@
 A production-ready Laravel application deployed on a kubeadm Kubernetes cluster using Docker and Helm.
 
 ## Live Demo
-- **Public URL:** https://constitute-hey-cartridge-here.trycloudflare.com
+- **Public URL:** https://dept-boc-trace-explore.trycloudflare.com
 - **Health Check:** https://cents-incl-returning-spirit.trycloudflare.com/health
 
 > Note: All URLs are served via Cloudflare Tunnel and may change on host restart.
