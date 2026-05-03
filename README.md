@@ -16,8 +16,8 @@
 
 | Endpoint | URL |
 |---|---|
-| Application | https://dept-boc-trace-explore.trycloudflare.com |
-| Health Check | https://dept-boc-trace-explore.trycloudflare.com/health |
+| Application | https://register-vehicles-process-metric.trycloudflare.com |
+| Health Check | https://register-vehicles-process-metric.trycloudflare.com/health |
 
 > All endpoints served via **Cloudflare Tunnel**. URLs may change on host restart (bare-metal constraint).
 
