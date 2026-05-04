@@ -16,8 +16,8 @@
 
 | Endpoint | URL |
 |---|---|
-| Application | https://register-vehicles-process-metric.trycloudflare.com |
-| Health Check | https://register-vehicles-process-metric.trycloudflare.com/health |
+| Application | *Note:* The live link is currently unavailable and can be enabled upon request. |
+| Health Check | *Note:* The live link is currently unavailable and can be enabled upon request/health |
 
 > All endpoints served via **Cloudflare Tunnel**. URLs may change on host restart (bare-metal constraint).
 
